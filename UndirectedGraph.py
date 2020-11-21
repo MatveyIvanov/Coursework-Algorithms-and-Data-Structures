@@ -1,4 +1,4 @@
-import Stack, Queue
+import Stack, Queue, MinHeap
 import sys
 
 
@@ -69,64 +69,64 @@ class UndirectedGraph:
         else: # Edge does not exist
             raise Exception("Edge does not exist")    
 
-    
     # Dijkstra shortest path algorithm
     def dijkstra(self, start, end):
         if start in self.adjacency_lists.keys() and end in self.adjacency_lists.keys(): # If start and end vertices in the adjacency list
             max_value = self.max() # Max value in the graph
             distances = [sys.maxsize] * (max_value + 1) # Distances from start to vertex[i]
-            known = [False] * (max_value + 1) # Set of processed vertices (marked as True)
+            minHeap = MinHeap.Minheap() # Min heap for vertixes that are not processed yet
+            minHeap.size = max_value + 1 # Min heap size
+            # Add all vertices to the min heap
+            for i in range(max_value + 1):
+                minHeap.heap.append(minHeap.new_node(i, distances[i]))
+                minHeap.pos.append(i)
+            minHeap.pos[start] = start
             distances[start] = 0 # Distance from start vertex to itself is 0
-            cur = start
-            while cur != end: # While distance from start to end is not found
-                min_vertex = -1 # Current minimal vertex
-                min_distance = sys.maxsize # Current minimal distance to minimal vertex
-                # Find minimal edge coming out of set of processed vertices
-                for i in range(max_value + 1): # Loop throught all vertices
-                    if distances[i] < min_distance and known[i] == False:
-                        min_distance = distances[i]
-                        min_vertex = i
-                known[min_vertex] = True # Add minimal vertex to the set of processed vertices
-                # Add new edges coming out of set of processed vertices if the are smaller than existing distances
-                for i in range(len(self.adjacency_lists[min_vertex])): 
-                    if known[self.adjacency_lists[min_vertex][i].value] == False and distances[min_vertex] + self.adjacency_lists[min_vertex][i].edge_value < distances[self.adjacency_lists[min_vertex][i].value]:
-                        distances[self.adjacency_lists[min_vertex][i].value] = distances[min_vertex] + self.adjacency_lists[min_vertex][i].edge_value
-                cur = min_vertex 
-            return distances[end] # Return shortest path value from start to end
-        else: # Path does not exist
+            minHeap.decrease_key(start, distances[start]) # Change vertex position in heap according to it's new distance
+            while minHeap.min_el() != end: # While distance from start to end is not found
+                cur = minHeap.extract_min() # Get minimal vertex with minimal distance from set of processed vertices
+                # Loop through adjacent vertices of current minimal vertex and update their distances if it's needed
+                for i in range(len(self.adjacency_lists[cur.vertex])):
+                    if minHeap.isInMinHeap(self.adjacency_lists[cur.vertex][i].value) and distances[cur.vertex] != sys.maxsize and self.adjacency_lists[cur.vertex][i].edge_value + distances[cur.vertex] < distances[self.adjacency_lists[cur.vertex][i].value]:
+                        distances[self.adjacency_lists[cur.vertex][i].value] = self.adjacency_lists[cur.vertex][i].edge_value + distances[cur.vertex] # Change distance
+                        minHeap.decrease_key(self.adjacency_lists[cur.vertex][i].value, distances[self.adjacency_lists[cur.vertex][i].value]) # Change position in min heap
+            return distances[end]
+        else:
             raise Exception("Path does not exist")
     
-    # Prima algorithm. Find minimal spanning tree
+
+    # Prim algorithm. Find minimal spanning tree
     def MST_prima(self, start):
         if start in self.adjacency_lists.keys(): # If start vertex in the graph
             tree = UndirectedGraph() # Create new graph that will be returned as a result
             tree.adjacency_lists[start] = [] # Create list for adjacency vertices of start vertex
             max_value = self.max()
             distances = [sys.maxsize] * (max_value + 1) # Distances between adjacent vertices in graph
-            known = [False] * (max_value + 1) # Set of processed vertices (marked as True)
             parent = [-1] * (max_value + 1) # Parents of each vertex
+            minHeap = MinHeap.Minheap() # Min heap for vertixes that are not processed yet
+            minHeap.size = max_value + 1 # Min heap size
+            # Add all vertices to the min heap
+            for i in range(max_value + 1):
+                minHeap.heap.append(minHeap.new_node(i, distances[i]))
+                minHeap.pos.append(i)
+            minHeap.pos[start] = start
             distances[start] = 0 # Distance from start vertex to itself is 0
-            while len(tree.adjacency_lists.keys()) != len(self.adjacency_lists.keys()): # Until all vertices are processed
-                min_vertex = -1 # Current minimal vertex
-                min_edge = sys.maxsize # Current minimal edge
-                # Find minimal edge coming out of set of processed vertices
-                for i in range(max_value + 1): # Loop throught all vertices
-                    if distances[i] < min_edge and known[i] == False:
-                        min_edge = distances[i]
-                        min_vertex = i
-                known[min_vertex] = True # Add minimal vertex to the set of processed vertices
-                if min_vertex != start: # If current minimal vertex isn't a start vertex
-                    tree.insert(min_vertex, parent[min_vertex], min_edge) # Add edge [min_vertex, min_vertex parent] into the tree
-                # Add new edges coming out of set of processed vertices if the are smaller than existing distances
-                for i in range(len(self.adjacency_lists[min_vertex])):
-                    if known[self.adjacency_lists[min_vertex][i].value] == False and self.adjacency_lists[min_vertex][i].edge_value < distances[self.adjacency_lists[min_vertex][i].value]:
-                        distances[self.adjacency_lists[min_vertex][i].value] = self.adjacency_lists[min_vertex][i].edge_value
-                        parent[self.adjacency_lists[min_vertex][i].value] = min_vertex # Add parent of minimal vertex
-            return tree # Return MST
-        else: # Start vertex does not exist
+            minHeap.decrease_key(start, distances[start]) # Change vertex position in heap according to it's new distance
+            while minHeap.size > 1: # Until all vertices are processed
+                cur = minHeap.extract_min() # Get minimal vertex with minimal distance from set of processed vertices
+                if cur.vertex != start:
+                    tree.insert(cur.vertex, parent[cur.vertex], cur.distance)
+                # Loop through adjacent vertices of current minimal vertex and update their distances if it's needed
+                for i in range(len(self.adjacency_lists[cur.vertex])):
+                    if minHeap.isInMinHeap(self.adjacency_lists[cur.vertex][i].value) and distances[cur.vertex] != sys.maxsize and self.adjacency_lists[cur.vertex][i].edge_value < distances[self.adjacency_lists[cur.vertex][i].value]:
+                        distances[self.adjacency_lists[cur.vertex][i].value] = self.adjacency_lists[cur.vertex][i].edge_value # Change distance
+                        minHeap.decrease_key(self.adjacency_lists[cur.vertex][i].value, distances[self.adjacency_lists[cur.vertex][i].value]) # Change position in min heap
+                        parent[self.adjacency_lists[cur.vertex][i].value] = cur.vertex # Add parent of minimal vertex
+            return tree
+        else:
             raise Exception("Vertex does not exist")
+                
 
-        
     # Depth first traversal iterator      
     class dftIterator:
 
