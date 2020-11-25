@@ -1,5 +1,5 @@
 {
-    "python.testing.cwd": "C:/Users/coolm/OneDrive/Desktop/3 сем/АиСД/Kurs/Kurs_code",
+    "python.testing.cwd": "C:/Users/Matvey/Desktop/3sem/АиСД/Kurs/Kurs_code",
     "python.testing.unittestArgs": [
         "-v",
         "-s",

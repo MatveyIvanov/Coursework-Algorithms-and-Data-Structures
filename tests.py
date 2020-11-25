@@ -30,7 +30,12 @@ class TestDirectedGraph(unittest.TestCase):
 
     def test_insert_vertex1_exists(self):
         self.graph.insert(2, 6)
-        cur = self.graph.adjacency_lists[2]
+        cur_list = self.graph.adjacency_lists.head
+        while cur_list != None:
+            if cur_list.value == 2:
+                break
+            cur_list = cur_list.next_list
+        cur = cur_list.next
         while cur != None:
             if cur.value == 6:
                 break
@@ -39,7 +44,12 @@ class TestDirectedGraph(unittest.TestCase):
 
     def test_insert_vertex1_doesnt_exist(self):
         self.graph.insert(12, 6)
-        cur = self.graph.adjacency_lists[12]
+        cur_list = self.graph.adjacency_lists.head
+        while cur_list != None:
+            if cur_list.value == 12:
+                break
+            cur_list = cur_list.next_list
+        cur = cur_list.next
         while cur != None:
             if cur.value == 6:
                 break
@@ -173,13 +183,37 @@ class TestUndirectedGraph(unittest.TestCase):
 
     def test_insert_vertex1_exists(self):
         self.graph.insert(4, 5, 0)
-        self.assertEqual(self.graph.adjacency_lists[4][-1].value, 5)
-        self.assertEqual(self.graph.adjacency_lists[5][-1].value, 4)
+        cur_list1 = self.graph.adjacency_lists.head
+        while cur_list1.value != 4:
+            cur_list1 = cur_list1.next_list
+        cur1 = cur_list1.next
+        while cur1.next != None:
+            cur1 = cur1.next
+        self.assertEqual(cur1.value, 5)
+        cur_list2 = self.graph.adjacency_lists.head
+        while cur_list2.value != 5:
+            cur_list2 = cur_list2.next_list
+        cur2 = cur_list2.next
+        while cur2.next != None:
+            cur2 = cur2.next
+        self.assertEqual(cur2.value, 4)
 
     def test_insert_vertex1_doesnt_exist(self):
         self.graph.insert(14, 5, 0)
-        self.assertEqual(self.graph.adjacency_lists[14][-1].value, 5)
-        self.assertEqual(self.graph.adjacency_lists[5][-1].value, 14)
+        cur_list1 = self.graph.adjacency_lists.head
+        while cur_list1.value != 14:
+            cur_list1 = cur_list1.next_list
+        cur1 = cur_list1.next
+        while cur1.next != None:
+            cur1 = cur1.next
+        self.assertEqual(cur1.value, 5)
+        cur_list2 = self.graph.adjacency_lists.head
+        while cur_list2.value != 5:
+            cur_list2 = cur_list2.next_list
+        cur2 = cur_list2.next
+        while cur2.next != None:
+            cur2 = cur2.next
+        self.assertEqual(cur2.value, 14)
 
     def test_insert_exception(self):
         try:

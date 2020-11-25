@@ -5,59 +5,82 @@ import Stack, Queue
 class DirectedGraph:
 
     def __init__(self):
-        self.adjacency_lists = {}
+        self.adjacency_lists = LinkedList()
 
     # Find vertex with max value
     def max(self):
-        max_value = 0
-        for key in self.adjacency_lists:
-            if key > max_value:
-                max_value = key
-            cur = self.adjacency_lists[key]
-            while cur is not None:
-                if cur.value > max_value:
-                    max_value = cur.value
-                cur = cur.next
-        return max_value
+        if self.adjacency_lists.head != None:
+            max_value = 0
+            cur_list = self.adjacency_lists.head
+            while cur_list != None:
+                cur = cur_list
+                while cur != None:
+                    if cur.value > max_value:
+                        max_value = cur.value
+                    cur = cur.next
+                cur_list = cur_list.next_list
+            return max_value
+        else:
+            raise Exception("Graph is empty")
 
     # Insert edge [vertex1, vertex2] into the graph
     def insert(self, vertex1, vertex2):
-        if vertex1 in self.adjacency_lists: # If vertex1 already in the graph
-            cur = self.adjacency_lists[vertex1]
-            while cur.next != None: # Search for the last element in the list
-                if cur.value == vertex2: # If edge already exists
-                    raise Exception("Edge already exists")
-                cur = cur.next
-            if cur.value == vertex2: # If edge already exists
-                raise Exception("Edge already exists")
+        # If graph is empty
+        if self.adjacency_lists.head == None:
+            self.adjacency_lists.head = LinkedListNode(vertex1)
+            self.adjacency_lists.head.next = LinkedListNode(vertex2)
+        else:
+            cur_list = self.adjacency_lists.head
+            # Check if vertex1 has adjacent vertices
+            while cur_list.next_list != None:
+                if cur_list.value == vertex1:
+                    if cur_list.next == None:
+                        cur_list.next = LinkedListNode(vertex2)
+                        return
+                    cur = cur_list.next
+                    while cur.next != None:
+                        if cur.value == vertex2:
+                            raise Exception("Edge already exists")
+                        cur = cur.next
+                    cur.next = LinkedListNode(vertex2)
+                    return
+                cur_list = cur_list.next_list
+            # If vertex1 has adjacent vertices
+            if cur_list.value == vertex1:
+                if cur_list.next == None:
+                    cur_list.next = LinkedListNode(vertex2)
+                    return
+                cur = cur_list.next
+                while cur.next != None:
+                    if cur.value == vertex2:
+                        raise Exception("Edge already exists")
+                    cur = cur.next
+                cur.next = LinkedListNode(vertex2)
+                return
+            # If vertex1 does not have adjacent vertices
             else:
-                new_node = LinkedListNode(vertex2)
-                cur.next = new_node
-        else: # If vertex1 not in the graph
-            new_head = LinkedListNode(vertex2)
-            self.adjacency_lists[vertex1] = new_head
+                cur_list.next_list = LinkedListNode(vertex1)
+                cur_list = cur_list.next_list
+                cur_list.next = LinkedListNode(vertex2)
+                
 
     # Remove edge [vertex1, vertex2] from the graph
     def remove(self, vertex1, vertex2):
-        if vertex1 in self.adjacency_lists: # If vertex1 in the graph
-            cur = self.adjacency_lists[vertex1]
+        cur_list = self.adjacency_lists.head
+        while cur_list != None and cur_list.value != vertex1:
+            cur_list = cur_list.next_list
+        # If vertex1 has adjacent vertices
+        if cur_list != None:
+            cur = cur_list
             # Delete vertex2 from adjacency lists
-            if cur.value == vertex2: 
-                self.adjacency_lists[vertex1] = cur.next
-                del cur
-                if self.adjacency_lists[vertex1] is None:
-                    self.adjacency_lists.pop(vertex1)
+            while cur.next != None and cur.next.value != vertex2:
+                cur = cur.next
+            if cur.next == None and cur.value != vertex2: # If vertex2 not in list of adjacent vertices of vertex1
+                raise Exception("Edge does not exist")
             else:
-                while cur != None:
-                    if cur.next != None and cur.next.value == vertex2:
-                        break
-                    cur = cur.next
-                if cur != None:
-                    temp = cur.next.next
-                    cur.next = None
-                    cur.next = temp
-                else: # If edge does not exist
-                    raise Exception("Edge does not exist")
+                temp = cur.next.next
+                cur.next = None
+                cur.next = temp
         else: # If edge does not exist
             raise Exception("Edge does not exist")
 
@@ -68,9 +91,10 @@ class DirectedGraph:
             self.stack = Stack.Stack()
             self.graph = graph
             self.graph_size = self.graph.max() # Number of vertices in graph
+            print(self.graph_size)
             self.visited = [False] * (self.graph_size + 1)
             if start is None:
-                self.stack.push(list(graph.adjacency_lists.keys())[0]) # Push first vertex of adjacency list into the stack
+                self.stack.push(self.graph.adjacency_lists.head.value) # Push first vertex of adjacency list into the stack
             else:
                 self.stack.push(start) # Push start vertex into the stack
             self.traversal_done = False
@@ -81,10 +105,13 @@ class DirectedGraph:
                 if self.visited[temp] == True: # If vertex is already visited go to the next vertex in stack
                     return self.__next__()
                 self.visited[temp] = True # Mark vertex as visited
-                if temp in self.graph.adjacency_lists.keys(): # If current vertex has adjacent vertices
+                cur_list = self.graph.adjacency_lists.head
+                while cur_list != None and cur_list.value != temp:
+                    cur_list = cur_list.next_list
+                if cur_list != None:
                     # Add not visited adjacent vertices into the stack
-                    cur = self.graph.adjacency_lists[temp]
-                    while cur is not None:
+                    cur = cur_list.next
+                    while cur != None:
                         if self.visited[cur.value] == False:
                             self.stack.push(cur.value)
                         cur = cur.next
@@ -92,17 +119,20 @@ class DirectedGraph:
             else:
                 # Checking for other unhandled strongly connected components
                 self.traversal_done = True
-                for key in self.graph.adjacency_lists: # Find not visited vertex that has adjacent vertices
-                    if self.visited[key] == False:
-                        self.stack.push(key)
+                cur_list = self.graph.adjacency_lists.head
+                # Check if there is not visited vertex in the graph
+                while cur_list != None:
+                    if self.visited[cur_list.value] == False:
+                        self.stack.push(cur_list.value)
                         self.traversal_done = False
                         break
+                    cur_list = cur_list.next_list
                 if self.traversal_done == False: # If we found that vertex
                     temp = self.stack.pop()
                     self.visited[temp] = True # Mark vertex as visited
-                    cur = self.graph.adjacency_lists[temp]
+                    cur = cur_list.next
                     # Add not visited adjacent vertices into the stack
-                    while cur is not None:
+                    while cur != None:
                         if self.visited[cur.value] == False:
                             self.stack.push(cur.value)
                         cur = cur.next
@@ -126,7 +156,7 @@ class DirectedGraph:
             self.graph_size = self.graph.max() # Number of vertices in graph
             self.visited = [False] * (self.graph_size + 1)
             if start is None:
-                self.queue.enqueue(list(graph.adjacency_lists.keys())[0]) # Insert first vertex of adjacency list into the queue
+                self.queue.enqueue(self.graph.adjacency_lists.head.value) # Insert first vertex of adjacency list into the queue
             else:
                 self.queue.enqueue(start) # Insert start vertex into the queue
             self.traversal_done = False 
@@ -137,10 +167,13 @@ class DirectedGraph:
                 if self.visited[temp] == True: # If vertex is already visited go to the next vertex in queue
                     return self.__next__()
                 self.visited[temp] = True # Mark vertex as visited
-                if temp in self.graph.adjacency_lists.keys(): # If current vertex has adjacent vertices
-                    # Add not visited adjacent vertices into the queue
-                    cur = self.graph.adjacency_lists[temp]
-                    while cur is not None:
+                cur_list = self.graph.adjacency_lists.head
+                while cur_list != None and cur_list.value != temp:
+                    cur_list = cur_list.next_list
+                # Add not visited adjacent vertices of current vertex if they exist
+                if cur_list != None:
+                    cur = cur_list.next
+                    while cur != None:
                         if self.visited[cur.value] == False:
                             self.queue.enqueue(cur.value)
                         cur = cur.next
@@ -148,17 +181,20 @@ class DirectedGraph:
             else:
                 # Checking for other unhandled strongly connected components
                 self.traversal_done = True
-                for key in self.graph.adjacency_lists: # Find not visited vertex that has adjacent vertices
-                    if self.visited[key] == False:
-                        self.queue.enqueue(key)
+                cur_list = self.graph.adjacency_lists.head
+                # Check if there is not visited vertex in the graph
+                while cur_list != None:
+                    if self.visited[cur_list.value] == False:
+                        self.queue.enqueue(cur_list.value)
                         self.traversal_done = False
                         break
+                    cur_list = cur_list.next_list
                 if self.traversal_done == False: # If we found that vertex
                     temp = self.queue.dequeue()
                     self.visited[temp] = True # Mark vertex as visited
-                    cur = self.graph.adjacency_lists[temp]
+                    cur = cur_list.next
                     # Add not visited adjacent vertices into the queue
-                    while cur is not None:
+                    while cur != None:
                         if self.visited[cur.value] == False:
                             self.queue.enqueue(cur.value)
                         cur = cur.next
