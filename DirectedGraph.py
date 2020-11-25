@@ -32,18 +32,7 @@ class DirectedGraph:
         else:
             cur_list = self.adjacency_lists.head
             # Check if vertex1 has adjacent vertices
-            while cur_list.next_list != None:
-                if cur_list.value == vertex1:
-                    if cur_list.next == None:
-                        cur_list.next = LinkedListNode(vertex2)
-                        return
-                    cur = cur_list.next
-                    while cur.next != None:
-                        if cur.value == vertex2:
-                            raise Exception("Edge already exists")
-                        cur = cur.next
-                    cur.next = LinkedListNode(vertex2)
-                    return
+            while cur_list.next_list != None and cur_list.value != vertex1:
                 cur_list = cur_list.next_list
             # If vertex1 has adjacent vertices
             if cur_list.value == vertex1:
